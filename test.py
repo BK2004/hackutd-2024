@@ -1,22 +1,42 @@
 import os
 import streamlit as st
-import pandas as pd
+import pandas
 
-@st.dialog
-def well_dialog():
-    pass
+class Well:
+    def __init__(self, path: str):
+        self.path = path
+        self.name = path.split("/")[-1].split("_")[0]
+        self.data = None
+        self.load_data()
+    
+    def load_data(self):
+        self.data = pandas.read_csv(self.path)
+        self.data = self.data.ffill()
+    
+    def render_preview(self, parent):
+        parent.subheader(self.name)
+        parent.line_chart(self.data, x="Time")
 
-st.sidebar.title("Alerts")
+def load_wells_in_dir(dir_path: str) -> list[Well]:
+    return [
+        Well(dir_path + "/" + filename)
+        for filename in os.listdir(dir_path)
+        if filename.endswith(".csv")
+    ]
 
-st.title("Wells")
+def main():
+    wells = load_wells_in_dir("data")
 
-for filename in os.listdir("data"):
-    if filename.endswith(".csv"):
-        df = pd.read_csv("data/" + filename)
-        df = df.ffill()
-        st.subheader(filename.split("_")[0])
-        st.line_chart(
-            df,
-            x="Time",
-            y=("Inj Gas Meter Volume Instantaneous", "Inj Gas Meter Volume Setpoint", "Inj Gas Valve Percent Open"),
-        )
+    @st.dialog("the title")
+    def well_dialog(well_name):
+        pass
+
+    st.sidebar.title("Alerts")
+
+    st.title("Wells")
+
+    for well in wells:
+        well.render_preview(st)
+
+if __name__ == "__main__":
+    main()
