@@ -26,6 +26,8 @@ st.html("""
 for k in DEFAULT_SESSION_STATES:
     st.session_state[k] = DEFAULT_SESSION_STATES[k]
 
+with st.sidebar:
+    st.title("Hydration Logs")
 with st.container(key="footer"):
     status_box = st.empty()
 
