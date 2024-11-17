@@ -1,8 +1,8 @@
 import streamlit as st
 
-from well import *
+from components import well
 
-wells = load_wells_in_dir("data")
+wells = well.load_wells_in_dir("data")
 
 @st.fragment
 def preview_card(well):
