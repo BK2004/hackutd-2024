@@ -10,6 +10,9 @@ class Status(enum.Enum):
     HYDRATION_PREDICTED = enum.auto()
     HYDRATION_DETECTED = enum.auto()
 
+    def is_priority(self):
+        return self != Status.OK
+
     def get_icon(self):
         if self == Status.OK:
             return ":material/check_circle:" # (v)
@@ -37,48 +40,44 @@ class Well:
         self.data = pandas.read_csv(self.path)
         self.data = self.data.ffill()
 
-class WellList:
-    def __init__(self):
-        self.priority: list[Well] = []
-        self.regular: list[Well] = []
-
-def fetch_well_data() -> WellList:
-    wells = WellList()
+def fetch_well_data() -> list[Well]:
+    wells = []
     for filename in os.listdir("data"):
         if filename.endswith(".csv"):
-            well = Well("data/" + filename, random_status())
-            if well.status == Status.OK:
-                wells.regular.append(well)
-            else:
-                wells.priority.append(well)
+            wells.append(Well("data/" + filename, random_status()))
     return wells
 
-def display_well(well: Well, expanded: bool):
-    icon = well.status.get_icon()
-    with st.expander(well.name, expanded, icon=icon):
-        if well.status == Status.OK:
-            st.info("No problems detected", icon=icon)
-        elif well.status == Status.HYDRATION_PREDICTED:
-            st.warning("Hydration predicted to occur soon", icon=icon)
-        elif well.status == Status.HYDRATION_DETECTED:
-            st.error("Hydration presence detected", icon=icon)
-        st.line_chart(well.data, x="Time")
+def display_well(well: Well, priority_only: bool):
+    slot = st.empty()
+    if (well.status.is_priority() == priority_only):
+        icon = well.status.get_icon()
+        with slot.container(key=f"well:{well.name}"):
+            with st.expander(well.name, priority_only, icon=icon):
+                if well.status == Status.OK:
+                    st.info("No problems detected", icon=icon)
+                elif well.status == Status.HYDRATION_PREDICTED:
+                    st.warning("Hydration predicted to occur soon", icon=icon)
+                elif well.status == Status.HYDRATION_DETECTED:
+                    st.error("Hydration presence detected", icon=icon)
+                st.line_chart(well.data, x="Time")
 
-@st.fragment(run_every=10)
+@st.fragment(run_every=15)
 def well_listing():
     status = st.status("Fetching latest information...")
     start_datetime = datetime.now()
 
     wells = fetch_well_data()
 
-    if wells.priority:
+    priority_slot = st.empty()
+    with priority_slot.container(key="priority-list"):
         st.title("Alerts")
-        for well in wells.priority:
+        for well in wells:
             display_well(well, True)
         st.divider()
     
-    st.title("Wells")
-    for well in wells.regular:
-        display_well(well, False)
+    with st.container(key="regular-list"):
+        st.title("Wells")
+        for well in wells:
+            display_well(well, False)
 
     status.update(label=start_datetime.strftime("Updated %m/%d, %I:%M %p"), state="complete")
