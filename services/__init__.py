@@ -1,1 +1,1 @@
-from .alerts import *
+from .data import *

@@ -2,7 +2,8 @@ import streamlit as st
 
 import enum
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
+from services.data import well_names, getWellData, mark_anomalies
 import pandas
 
 class Status(enum.Enum):
@@ -29,22 +30,18 @@ def random_status():
     return choice([Status.OK, Status.OK, Status.OK, Status.OK, Status.OK, Status.OK, Status.OK, Status.OK, Status.HYDRATION_PREDICTED, Status.HYDRATION_DETECTED])
 
 class Well:
-    def __init__(self, path: str, status: Status):
-        self.path: str = path
-        self.name: str = path.split("/")[-1].split("_")[0]
-        self.data: pandas.DataFrame = None
+    def __init__(self, data: pandas.DataFrame, status: Status, name: str):
+        self.name: str = name
+        self.data: pandas.DataFrame = data
         self.status: Status = status
-        self.load_data()
-    
-    def load_data(self):
-        self.data = pandas.read_csv(self.path)
-        self.data = self.data.ffill()
 
 def fetch_well_data() -> list[Well]:
     wells = []
-    for filename in os.listdir("./data"):
-        if filename.endswith(".csv"):
-            wells.append(Well("./data/" + filename, random_status()))
+    for well_name in well_names:
+        data = getWellData(well_name, datetime.now() - timedelta(weeks=8), datetime.now())
+        mark_anomalies(data)
+        well = Well(data, random_status(), well_name) # TODO: Use small range of time based on interval
+        wells.append(well)
     return wells
 
 def display_well(well: Well, priority_only: bool):
@@ -59,7 +56,7 @@ def display_well(well: Well, priority_only: bool):
                     st.warning("Readings suggest a hydrate is likely to form. Inspect the gas injector riser as soon as possible.", icon=icon)
                 elif well.status == Status.HYDRATION_DETECTED:
                     st.error("Detected formation of a hydrate. Immediate action is needed for the gas injector to function properly.", icon=icon)
-                st.line_chart(well.data, x="Time")
+                st.scatter_chart(data=well.data, x="Time", y="Inst/Set/Valve", color="anomaly")
 
 @st.fragment(run_every=15)
 def well_listing():
