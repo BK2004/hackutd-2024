@@ -8,7 +8,6 @@ DEFAULT_SESSION_STATES = {
     "timestamp_0": MIN_TIMESTAMP,
     "timestamp": MIN_TIMESTAMP,
 }
-import notifications
 
 # Custom CSS for the fixed footer
 st.html("""
