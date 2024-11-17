@@ -14,7 +14,7 @@ def readAll():
 		i += 1
 		df = pd.read_csv("./data/" + filename)
 		df = df.ffill().bfill()
-		df['Inst/Set/Valve'] = df[INST_COL]/df[SETPOINT_COL]/(df[VALVE_COL])
+		df['Inst/Set/Valve'] = df[INST_COL] / df[SETPOINT_COL] / df[VALVE_COL]
 		
 		data = pd.concat([data, df])
 	
@@ -22,14 +22,14 @@ def readAll():
 
 def computeMeanSD(data: pd.DataFrame):
 	sorted_data = data.sort_values(by="Inst/Set/Valve", ascending=False)
-	sorted_top = sorted_data['Inst/Set/Valve'].head(int(.8*len(sorted_data['Inst/Set/Valve'])))
+	sorted_top = sorted_data['Inst/Set/Valve'].head(int(0.8 * len(sorted_data['Inst/Set/Valve'])))
 	return (sorted_top.mean(), sorted_top.std())
 
 data = readAll()
 (mean, sd) = computeMeanSD(data)
 
 data.plot.scatter(x='Time', y='Inst/Set/Valve')
-y = [mean - 2*sd for _ in range(len(data['Time']))]
+y = [mean - 2 * sd for _ in range(len(data['Time']))]
 print(mean)
 plt.plot(data['Time'], y, color="red")
 plt.show()
