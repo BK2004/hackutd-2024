@@ -28,7 +28,7 @@ def read_all():
 def compute_mean_sd(data: pd.DataFrame):
 	sorted_data = data.sort_values(by="Inst/Set/Valve", ascending=False)
 	sorted_top = sorted_data['Inst/Set/Valve'].head(int(0.8 * len(sorted_data['Inst/Set/Valve'])))
-	return (sorted_top.mean(), sorted_top.std())
+	return sorted_top.mean(), sorted_top.std()
 
 data = read_all()
 mean, sd = compute_mean_sd(data)
