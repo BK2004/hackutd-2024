@@ -43,7 +43,7 @@ class Well:
             st.session_state[alert_key] = self.status
         self.alert_status = st.session_state[alert_key]
 
-def fetch_well_data() -> list[Well]:
+def fetch_well_data(dateRange) -> list[Well]:
     wells = []
     for well_name in well_names:
         data = get_well_data(well_name, datetime.now() - timedelta(weeks=8), datetime.now())
@@ -90,11 +90,11 @@ def display_wells(wells: list[Well], with_status: Status):
                         )
 
 @st.fragment(run_every=20)
-def well_listing(status_box):
+def well_listing(status_box, dateRange):
     status = status_box.status("Fetching latest information...")
     start_datetime = datetime.now()
 
-    wells = fetch_well_data()
+    wells = fetch_well_data(dateRange)
 
     st.title("Alerts")
     priority_slot = st.empty()

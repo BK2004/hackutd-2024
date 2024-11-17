@@ -45,4 +45,4 @@ st.slider(
 with st.container(key="footer"):
     status_box = st.empty()
 
-well.well_listing(status_box)
+well.well_listing(status_box, st.session_state[DATE_RANGE_KEY])
