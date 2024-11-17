@@ -35,10 +35,10 @@ class Well:
         self.data: pandas.DataFrame = data
         self.status: Status = status
 
-def fetch_well_data() -> list[Well]:
+def fetch_well_data(dateRange) -> list[Well]:
     wells = []
     for well_name in well_names:
-        data = getWellData(well_name, datetime.now() - timedelta(weeks=8), datetime.now())
+        data = getWellData(well_name, dateRange[0], dateRange[1])
         mark_anomalies(data)
         well = Well(data, random_status(), well_name) # TODO: Use small range of time based on interval
         wells.append(well)
@@ -59,11 +59,11 @@ def display_well(well: Well, priority_only: bool):
                 st.scatter_chart(data=well.data, x="Time", y="Inst/Set/Valve", color="anomaly")
 
 @st.fragment(run_every=15)
-def well_listing():
+def well_listing(dateRange):
     status = st.status("Fetching latest information...")
     start_datetime = datetime.now()
 
-    wells = fetch_well_data()
+    wells = fetch_well_data(dateRange)
 
     priority_slot = st.empty()
     with priority_slot.container(key="priority-list"):

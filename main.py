@@ -39,4 +39,4 @@ with header:
     step=timedelta(days=1),
     )
 
-well.well_listing()
+well.well_listing(selected_date_range)
