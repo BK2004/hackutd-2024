@@ -43,9 +43,6 @@ st.slider(
 )
 
 with st.container(key="footer"):
-    status = st.status("Fetching latest information...")
-    start_datetime = datetime.now()
+    status_box = st.empty()
 
-well.well_listing()
-
-status.update(label=start_datetime.strftime("Updated %m/%d, %I:%M %p"), state="complete")
+well.well_listing(status_box)
