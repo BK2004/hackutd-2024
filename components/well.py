@@ -48,9 +48,14 @@ def fetch_well_data(dateRange) -> list[Well]:
     for well_name in well_names:
         data = get_well_data(well_name, datetime.now() - timedelta(weeks=8), datetime.now())
         mark_anomalies(data)
-        well = Well(well_name, data, random_status()) # TODO: Use small range of time based on interval
+        well = Well(well_name, data, getStatus(data)) # TODO: Use small range of time based on interval
         wells.append(well)
     return wells
+
+def getStatus(data):
+    if data.iloc[-1]["anomaly"] == True:
+        return Status.HYDRATE_DETECTED
+    return Status.OK
 
 def display_wells(wells: list[Well], with_status: Status):
     for well in wells:
