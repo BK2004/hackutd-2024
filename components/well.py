@@ -104,7 +104,7 @@ def display_wells(wells: list[Well], with_status: Status):
                             well.alert_status = well.status
 
                         st.button(
-                            label="Dismiss alert",
+                            label="Mark as resolved",
                             icon=":material/close:",
                             help=("Mark this issue as resolved and update oil well status" if can_dismiss else "This issue is ongoing and cannot be dismissed"),
                             key=f"well_alert_dismiss_{well.name.lower()}",
@@ -154,3 +154,8 @@ def notify_alert(well: Well):
         tag=st.session_state[PUSH_TAG_KEY],
     )
     st.session_state[PUSH_TAG_KEY] += 1
+
+    with st.sidebar.container(border=True):
+        st.write("**Hydrate Formation Detected**" if well.status == Status.HYDRATE_DETECTED else "**Hydrate formation likely**")
+        st.write(f"Oil Well - **{well.name}**")
+        st.write("Time: " + st.session_state['timestamp'].strftime("%m/%d, %I:%M %p"))
