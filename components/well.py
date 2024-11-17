@@ -41,17 +41,19 @@ class Well:
                 notify_alert(self)
         self.alert_status = st.session_state[alert_key]
 
-def fetch_well_data(dateRange) -> list[Well]:
+def fetch_well_data() -> list[Well]:
     wells = []
     for well_name in well_names:
-        data = get_well_data(well_name, datetime.now() - timedelta(weeks=8), datetime.now())
+        data = get_well_data(well_name, st.session_state['timestamp_0'], st.session_state['timestamp'] if 'timestamp' in st.session_state else datetime.now())
         mark_anomalies(data)
         well = Well(well_name, data, getStatus(data)) # TODO: Use small range of time based on interval
         wells.append(well)
     return wells
 
 def getStatus(data):
-    if data.iloc[-1]["anomaly"] == True:
+    if len(data) == 0: return Status.OK
+
+    if data.iloc[-1]['anomaly'] == True:
         return Status.HYDRATE_DETECTED
     return Status.OK
 
@@ -92,12 +94,12 @@ def display_wells(wells: list[Well], with_status: Status):
                             args=[well]
                         )
 
-@st.fragment(run_every=20)
-def well_listing(status_box, dateRange):
+@st.fragment(run_every=2)
+def well_listing(status_box):
     status = status_box.status("Fetching latest information...")
-    start_datetime = datetime.now()
-
-    wells = fetch_well_data(dateRange)
+    if st.session_state['timestamp'] <= datetime.now(): st.session_state['timestamp'] += timedelta(hours=24)
+    
+    wells = fetch_well_data()
 
     st.title("Alerts")
     priority_slot = st.empty()
@@ -114,7 +116,7 @@ def well_listing(status_box, dateRange):
     with st.container(key="regular_list"):
         display_wells(wells, Status.OK)
     
-    status.update(label=start_datetime.strftime("Updated %m/%d, %I:%M %p"), state="complete")
+    status.update(label=st.session_state['timestamp'].strftime("Updated %m/%d, %I:%M %p"), state="complete")
 
 PUSH_TAG_KEY = "push_tag"
 

@@ -5,6 +5,7 @@ import os
 INST_COL = "Inj Gas Meter Volume Instantaneous"
 SETPOINT_COL = "Inj Gas Meter Volume Setpoint"
 VALVE_COL = "Inj Gas Valve Percent Open"
+MIN_TIMESTAMP = 0
 
 well_names = []
 
@@ -18,7 +19,7 @@ def read_all() -> pd.DataFrame:
 		df['Well'] = [well_name] * len(df['Time'])
 
 		df = df.ffill().bfill()
-		df['Inst/Set/Valve'] = df[INST_COL] / df[SETPOINT_COL] / df[VALVE_COL]
+		df['Inst/Set/Valve'] = df[INST_COL] / df[SETPOINT_COL] / (df[VALVE_COL] / 100)
 		
 		data = pd.concat([data, df])
 	data['Time'] = pd.to_datetime(data['Time'])
@@ -31,6 +32,7 @@ def compute_mean_sd(data: pd.DataFrame) -> tuple[float, float]:
 	return sorted_top.mean(), sorted_top.std()
 
 data = read_all()
+MIN_TIMESTAMP = data['Time'].min()
 mean, sd = compute_mean_sd(data)
 
 def get_well_data(well, start_time, end_time) -> pd.DataFrame:
