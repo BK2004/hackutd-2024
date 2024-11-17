@@ -1,6 +1,8 @@
 import streamlit as st
+import pandas as pd
 from components import well
 from datetime import datetime
+import services
 
 DEFAULT_SESSION_STATES = {
     "timestamp_0": datetime.now(),
@@ -31,22 +33,27 @@ st.title("DeHydrate")
 
 @st.dialog("Add a new oil well")
 def add_well_dialog():
-    uploaded_files = st.file_uploader(
+    well_name = st.text_input("Oil well name")
+    uploaded_file = st.file_uploader(
         label="Add a new oil well",
         type=["csv"],
-        accept_multiple_files=True,
+        accept_multiple_files=False,
         key="add_well_file_uploader",
         help="Upload a CSV file containing gas injector data to analyze",
     )
     if st.button(
         label="Add",
         icon=":material/add:",
-        help=("Analyze the well data and add it to the list" if len(uploaded_files) != 0 else "No files have been uploaded"),
+        help=("Analyze the well data and add it to the list" if uploaded_file is not None and not well_name.isspace() else "More information needed"),
         type="primary",
-        disabled=(len(uploaded_files) == 0),
+        disabled=(uploaded_file is None or well_name.isspace()),
         use_container_width=True,
         key="add_well_finish_button"
     ):
+        uploaded_data = pd.read_csv(uploaded_file)
+        services.data = pd.concat([services.data, services.convert_data(well_name, uploaded_data)])
+        services.well_names.append(well_name)
+
         st.rerun()
 
 if st.button(

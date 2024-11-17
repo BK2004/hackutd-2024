@@ -113,7 +113,7 @@ def display_wells(wells: list[Well], with_status: Status):
                             args=[well]
                         )
 
-@st.fragment(run_every=2)
+@st.fragment(run_every=5)
 def well_listing(status_box):
     global last_timestamp
 

@@ -9,6 +9,12 @@ MIN_TIMESTAMP = 0
 
 well_names = []
 
+def convert_data(well_name: str, df: pd.DataFrame) -> pd.DataFrame:
+	df['Well'] = [well_name] * len(df['Time'])
+	df = df.ffill().bfill()
+	df['Inst/Set/Valve'] = df[INST_COL] / df[SETPOINT_COL] / (df[VALVE_COL] / 100)
+	return df
+
 def read_all() -> pd.DataFrame:
 	data = pd.DataFrame()
 	for filename in os.listdir("./data"):
@@ -16,10 +22,7 @@ def read_all() -> pd.DataFrame:
 		well_name = filename.split("_")[0]
 		well_names.append(well_name)
 
-		df['Well'] = [well_name] * len(df['Time'])
-
-		df = df.ffill().bfill()
-		df['Inst/Set/Valve'] = df[INST_COL] / df[SETPOINT_COL] / (df[VALVE_COL] / 100)
+		df = convert_data(well_name, df)
 		
 		data = pd.concat([data, df])
 	data['Time'] = pd.to_datetime(data['Time'])
