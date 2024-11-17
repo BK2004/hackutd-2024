@@ -18,7 +18,7 @@ def readAll():
 		df['Well'] = [well_name for _ in range(len(df['Time']))]
 
 		df = df.ffill().bfill()
-		df['Inst/Set/Valve'] = df[INST_COL]/df[SETPOINT_COL]/(df[VALVE_COL])
+		df['Inst/Set/Valve'] = df[INST_COL] / df[SETPOINT_COL] / df[VALVE_COL]
 		
 		data = pd.concat([data, df])
 	data['Time'] = pd.to_datetime(data['Time'])
@@ -27,7 +27,7 @@ def readAll():
 
 def computeMeanSD(data: pd.DataFrame):
 	sorted_data = data.sort_values(by="Inst/Set/Valve", ascending=False)
-	sorted_top = sorted_data['Inst/Set/Valve'].head(int(.8*len(sorted_data['Inst/Set/Valve'])))
+	sorted_top = sorted_data['Inst/Set/Valve'].head(int(0.8 * len(sorted_data['Inst/Set/Valve'])))
 	return (sorted_top.mean(), sorted_top.std())
 
 data = readAll()
