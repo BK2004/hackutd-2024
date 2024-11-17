@@ -42,42 +42,37 @@ class Well:
 
 def fetch_well_data() -> list[Well]:
     wells = []
-    for filename in os.listdir("data"):
+    for filename in os.listdir("./data"):
         if filename.endswith(".csv"):
-            wells.append(Well("data/" + filename, random_status()))
+            wells.append(Well("./data/" + filename, random_status()))
     return wells
 
 def display_well(well: Well, priority_only: bool):
     slot = st.empty()
     if (well.status.is_priority() == priority_only):
         icon = well.status.get_icon()
-        with slot.container(key=f"well:{well.name}"):
-            with st.expander(well.name, priority_only, icon=icon):
+        with slot.container(key=f"well_{well.name.lower()}"):
+            with st.expander(f"Oil Well &mdash; {well.name}", priority_only, icon=icon):
                 if well.status == Status.OK:
-                    st.info("No problems detected", icon=icon)
+                    st.info("No problems detected.", icon=icon)
                 elif well.status == Status.HYDRATION_PREDICTED:
-                    st.warning("Hydration predicted to occur soon", icon=icon)
+                    st.warning("Readings suggest a hydrate is likely to form. Inspect the gas injector riser as soon as possible.", icon=icon)
                 elif well.status == Status.HYDRATION_DETECTED:
-                    st.error("Hydration presence detected", icon=icon)
+                    st.error("Detected formation of a hydrate. Immediate action is needed for the gas injector to function properly.", icon=icon)
                 st.line_chart(well.data, x="Time")
 
 @st.fragment(run_every=15)
 def well_listing():
-    status = st.status("Fetching latest information...")
-    start_datetime = datetime.now()
-
     wells = fetch_well_data()
 
     priority_slot = st.empty()
-    with priority_slot.container(key="priority-list"):
+    with priority_slot.container(key="priority_list"):
         st.title("Alerts")
         for well in wells:
             display_well(well, True)
         st.divider()
     
-    with st.container(key="regular-list"):
-        st.title("Wells")
+    with st.container(key="regular_list"):
+        st.title("Oil Wells")
         for well in wells:
             display_well(well, False)
-
-    status.update(label=start_datetime.strftime("Updated %m/%d, %I:%M %p"), state="complete")
