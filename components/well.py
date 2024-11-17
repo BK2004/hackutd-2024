@@ -109,7 +109,7 @@ def display_wells(wells: list[Well], with_status: Status):
                             well.alert_status = well.status
 
                         st.button(
-                            label="Dismiss alert",
+                            label="Mark as resolved",
                             icon=":material/close:",
                             help=("Mark this issue as resolved and update oil well status" if can_dismiss else "This issue is ongoing and cannot be dismissed"),
                             key=f"well_alert_dismiss_{well.name.lower()}",
@@ -129,7 +129,7 @@ def well_listing(status_box):
     timechange = timedelta(days=(datetime.now() - st.session_state["timestamp_0"] + MIN_TIMESTAMP).second)
     wells = fetch_well_data(MIN_TIMESTAMP + timechange)
 
-    st.title("Alerts")
+    st.subheader("Alerts")
     priority_slot = st.empty()
     if any(wells[well].alert_status.is_priority() for well in wells):
         with priority_slot.container(key="priority_list"):
@@ -140,7 +140,7 @@ def well_listing(status_box):
 
     st.divider()
 
-    st.title("Oil Wells")
+    st.subheader("Oil Wells")
     with st.container(key="regular_list"):
         display_wells(wells, Status.OK)
     last_timestamp = MIN_TIMESTAMP + timechange
@@ -159,3 +159,8 @@ def notify_alert(well: Well):
         tag=st.session_state[PUSH_TAG_KEY],
     )
     st.session_state[PUSH_TAG_KEY] += 1
+
+    with st.sidebar.container(border=True):
+        st.write("**Hydrate Formation Detected**" if well.status == Status.HYDRATE_DETECTED else "**Hydrate formation likely**")
+        st.write(f"Oil Well - **{well.name}**")
+        st.write("Time: " + st.session_state['timestamp'].strftime("%m/%d, %I:%M %p"))
