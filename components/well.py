@@ -35,21 +35,13 @@ class Well:
         self.data: pandas.DataFrame = data
         self.status: Status = status
 
-class WellList:
-    def __init__(self):
-        self.priority: list[Well] = []
-        self.regular: list[Well] = []
-
-def fetch_well_data() -> WellList:
-    wells = WellList()
+def fetch_well_data() -> list[Well]:
+    wells = []
     for well_name in well_names:
         data = getWellData(well_name, datetime.now() - timedelta(weeks=8), datetime.now())
         mark_anomalies(data)
         well = Well(data, random_status(), well_name) # TODO: Use small range of time based on interval
-        if well.status == Status.OK:
-            wells.regular.append(well)
-        else:
-            wells.priority.append(well)
+        wells.append(well)
     return wells
 
 def display_well(well: Well, priority_only: bool):
