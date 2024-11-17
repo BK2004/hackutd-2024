@@ -4,9 +4,8 @@ from components import well
 from datetime import datetime
 import services
 
-DEFAULT_SESSION_STATES = {
-    "timestamp_0": datetime.now(),
-}
+if "timestamp_0" not in st.session_state:
+    st.session_state["timestamp_0"] = datetime.now()
 
 # Custom CSS for the fixed footer
 st.html("""
@@ -22,9 +21,6 @@ st.html("""
         }
     </style>
 """)
-
-for k in DEFAULT_SESSION_STATES:
-    st.session_state[k] = DEFAULT_SESSION_STATES[k]
 
 with st.sidebar:
     st.title("Hydration Logs")

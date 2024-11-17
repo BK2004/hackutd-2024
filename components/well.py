@@ -122,8 +122,6 @@ def display_wells(wells: list[Well], with_status: Status):
 def well_listing(status_box):
     global last_timestamp
 
-    if last_timestamp is None:
-        last_timestamp = MIN_TIMESTAMP
     status = status_box.status("Fetching latest information...")
 
     timechange = timedelta(days=(datetime.now() - st.session_state["timestamp_0"] + MIN_TIMESTAMP).second)
@@ -160,7 +158,16 @@ def notify_alert(well: Well, timestamp):
     )
     st.session_state[PUSH_TAG_KEY] += 1
 
-    with st.sidebar.container(border=True):
-        st.write("**Hydrate Formation Detected**" if well.status == Status.HYDRATE_DETECTED else "**Hydrate formation likely**")
-        st.write(f"Oil Well - **{well.name}**")
-        st.write("Time: " + timestamp.strftime("%m/%d, %I:%M %p"))
+    if "log_messages" not in st.session_state:
+        st.session_state["log_messages"] = []
+    
+    st.session_state["log_messages"].insert(0, [
+        "**Hydrate Formation Detected**" if well.status == Status.HYDRATE_DETECTED else "**Hydrate formation likely**",
+        f"Oil Well - **{well.name}**",
+        "Time: " + timestamp.strftime("%m/%d, %I:%M %p"),
+    ])
+
+    for message in st.session_state["log_messages"]:
+        with st.sidebar.container(border=True):
+            for line in message:
+                st.write(line)
