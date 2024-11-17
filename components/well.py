@@ -62,9 +62,14 @@ def fetch_well_data(timestamp) -> list[Well]:
         else:
             st.session_state.wells[well_name].append(data)
             if data[(data['anomaly'] == True)].size > 0:
-                st.session_state[f"well_alert_{well_name.lower()}"] = Status.HYDRATE_DETECTED
+                # Update status and push notif
+                if st.session_state.wells[well_name].alert_status != Status.HYDRATE_DETECTED:
+                    st.session_state.wells[well_name].status = Status.HYDRATE_DETECTED
+                    notify_alert(st.session_state.wells[well_name])
+
+                st.session_state.wells[well_name].status = Status.HYDRATE_DETECTED if data.iloc[-1]["anomaly"] else Status.OK
                 st.session_state.wells[well_name].alert_status = Status.HYDRATE_DETECTED
-                st.session_state.wells[well_name].status = Status.HYDRATE_DETECTED if data.iloc[-1]["anomaly"] == True else Status.OK
+                st.session_state[f"well_alert_{well_name.lower()}"] = Status.HYDRATE_DETECTED
     return st.session_state.wells
 
 def getStatus(data):
@@ -113,7 +118,7 @@ def display_wells(wells: list[Well], with_status: Status):
                             args=[well]
                         )
 
-@st.fragment(run_every=2)
+@st.fragment(run_every=5)
 def well_listing(status_box):
     global last_timestamp
 
@@ -121,7 +126,7 @@ def well_listing(status_box):
         last_timestamp = MIN_TIMESTAMP
     status = status_box.status("Fetching latest information...")
 
-    timechange = timedelta(days=(datetime.now() - st.session_state["timestamp_0"] + MIN_TIMESTAMP).second/2)
+    timechange = timedelta(days=(datetime.now() - st.session_state["timestamp_0"] + MIN_TIMESTAMP).second)
     wells = fetch_well_data(MIN_TIMESTAMP + timechange)
 
     st.title("Alerts")
