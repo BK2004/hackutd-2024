@@ -42,7 +42,7 @@ class Well:
         if alert_key not in st.session_state or self.status > st.session_state[alert_key]:
             st.session_state[alert_key] = self.status
             if self.status.is_priority():
-                notify_alert(self, last_timestamp)
+                notify_alert(self)
         self.alert_status = st.session_state[alert_key]
     
     def append(self, data: pandas.DataFrame):
@@ -65,7 +65,7 @@ def fetch_well_data(timestamp) -> list[Well]:
                 # Update status and push notif
                 if st.session_state.wells[well_name].alert_status != Status.HYDRATE_DETECTED:
                     st.session_state.wells[well_name].status = Status.HYDRATE_DETECTED
-                    notify_alert(st.session_state.wells[well_name], timestamp)
+                    notify_alert(st.session_state.wells[well_name])
 
                 st.session_state.wells[well_name].status = Status.HYDRATE_DETECTED if data.iloc[-1]["anomaly"] else Status.OK
                 st.session_state.wells[well_name].alert_status = Status.HYDRATE_DETECTED
@@ -149,7 +149,7 @@ def well_listing(status_box):
 
 PUSH_TAG_KEY = "push_tag"
 
-def notify_alert(well: Well, timestamp):
+def notify_alert(well: Well):
     if PUSH_TAG_KEY not in st.session_state:
         st.session_state[PUSH_TAG_KEY] = 1
     notifications.send_push(
@@ -159,8 +159,3 @@ def notify_alert(well: Well, timestamp):
         tag=st.session_state[PUSH_TAG_KEY],
     )
     st.session_state[PUSH_TAG_KEY] += 1
-
-    with st.sidebar.container(border=True):
-        st.write("**Hydrate Formation Detected**" if well.status == Status.HYDRATE_DETECTED else "**Hydrate formation likely**")
-        st.write(f"Oil Well - **{well.name}**")
-        st.write("Time: " + timestamp.strftime("%m/%d, %I:%M %p"))
