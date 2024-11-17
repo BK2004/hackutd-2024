@@ -65,7 +65,7 @@ def fetch_well_data(timestamp) -> list[Well]:
                 # Update status and push notif
                 if st.session_state.wells[well_name].alert_status != Status.HYDRATE_DETECTED:
                     st.session_state.wells[well_name].status = Status.HYDRATE_DETECTED
-                    notify_alert(st.session_state.wells[well_name])
+                    notify_alert(st.session_state.wells[well_name], timestamp)
 
                 st.session_state.wells[well_name].status = Status.HYDRATE_DETECTED if data.iloc[-1]["anomaly"] else Status.OK
                 st.session_state.wells[well_name].alert_status = Status.HYDRATE_DETECTED
@@ -96,7 +96,7 @@ def display_wells(wells: list[Well], with_status: Status):
                     st.scatter_chart(
                         data=well.data,
                         x="Time",
-                        y="Inst/Set/Valve",
+                        y="(Fraction of Setpoint) / (Valve Percent)",
                         color="anomaly",
                         size=50,
                     )
@@ -147,7 +147,7 @@ def well_listing(status_box):
 
 PUSH_TAG_KEY = "push_tag"
 
-def notify_alert(well: Well):
+def notify_alert(well: Well, timestamp):
     if PUSH_TAG_KEY not in st.session_state:
         st.session_state[PUSH_TAG_KEY] = 1
     notifications.send_push(

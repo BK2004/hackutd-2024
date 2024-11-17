@@ -12,7 +12,7 @@ well_names = []
 def convert_data(well_name: str, df: pd.DataFrame) -> pd.DataFrame:
 	df['Well'] = [well_name] * len(df['Time'])
 	df = df.ffill().bfill()
-	df['Inst/Set/Valve'] = df[INST_COL] / df[SETPOINT_COL] / (df[VALVE_COL] / 100)
+	df['(Fraction of Setpoint) / (Valve Percent)'] = df[INST_COL] / df[SETPOINT_COL] / (df[VALVE_COL] / 100)
 	return df
 
 def read_all() -> pd.DataFrame:
@@ -30,8 +30,8 @@ def read_all() -> pd.DataFrame:
 	return data
 
 def compute_mean_sd(data: pd.DataFrame) -> tuple[float, float]:
-	sorted_data = data.sort_values(by="Inst/Set/Valve", ascending=False)
-	sorted_top = sorted_data['Inst/Set/Valve'].head(int(0.8 * len(sorted_data['Inst/Set/Valve'])))
+	sorted_data = data.sort_values(by="(Fraction of Setpoint) / (Valve Percent)", ascending=False)
+	sorted_top = sorted_data['(Fraction of Setpoint) / (Valve Percent)'].head(int(0.8 * len(sorted_data['(Fraction of Setpoint) / (Valve Percent)'])))
 	return sorted_top.mean(), sorted_top.std()
 
 data = read_all()
@@ -44,4 +44,4 @@ def get_well_data(well, start_time, end_time) -> pd.DataFrame:
 
 # Mark hydrates with anomaly col (red for hydrate, '' otherwise)
 def mark_anomalies(data: pd.DataFrame):
-	data["anomaly"] = np.where(data['Inst/Set/Valve'] <= mean - 2 * sd, True, False)
+	data["anomaly"] = np.where(data['(Fraction of Setpoint) / (Valve Percent)'] <= mean - 2 * sd, True, False)
