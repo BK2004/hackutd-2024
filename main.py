@@ -2,6 +2,7 @@ import streamlit as st
 from datetime import datetime, timedelta
 
 from components import well
+import notifications
 
 # Custom CSS for the fixed footer
 st.html("""

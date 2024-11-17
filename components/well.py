@@ -3,9 +3,10 @@ import streamlit as st
 import enum
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from services.data import well_names, get_well_data, mark_anomalies
 import pandas
-from random import randrange
+
+from services.data import well_names, get_well_data, mark_anomalies
+import notifications
 
 class Status(enum.IntEnum):
     OK = 0
@@ -25,11 +26,6 @@ class Status(enum.IntEnum):
         else:
             return ":material/help:" # (?)
 
-def random_status():
-    # teehee
-    number = randrange(0, 20)
-    return Status.HYDRATE_DETECTED if number == 0 else Status.HYDRATE_PREDICTED if number == 1 else Status.OK
-
 @dataclass
 class Well:
     name: str
@@ -41,6 +37,8 @@ class Well:
         alert_key: str = f"well_alert_{self.name.lower()}"
         if alert_key not in st.session_state or self.status > st.session_state[alert_key]:
             st.session_state[alert_key] = self.status
+            if self.status.is_priority():
+                notify_alert(self)
         self.alert_status = st.session_state[alert_key]
 
 def fetch_well_data(dateRange) -> list[Well]:
@@ -117,3 +115,16 @@ def well_listing(status_box, dateRange):
         display_wells(wells, Status.OK)
     
     status.update(label=start_datetime.strftime("Updated %m/%d, %I:%M %p"), state="complete")
+
+PUSH_TAG_KEY = "push_tag"
+
+def notify_alert(well: Well):
+    if PUSH_TAG_KEY not in st.session_state:
+        st.session_state[PUSH_TAG_KEY] = 1
+    notifications.send_push(
+        title=("Hydrate formation detected" if well.status == Status.HYDRATE_DETECTED else "Hydrate formation likely"),
+        body=f"Oil Well \u2014 {well.name}",
+        icon_path=f"./images/{'error' if well.status == Status.HYDRATE_DETECTED else 'warning'}_icon.png",
+        tag=st.session_state[PUSH_TAG_KEY],
+    )
+    st.session_state[PUSH_TAG_KEY] += 1
