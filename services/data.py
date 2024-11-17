@@ -18,7 +18,8 @@ def read_all():
 		df['Well'] = [well_name] * len(df['Time'])
 
 		df = df.ffill().bfill()
-		df['Inst/Set/Valve'] = df[INST_COL] / df[SETPOINT_COL] / df[VALVE_COL]
+		df['Inst/Set'] = df[INST_COL] / df[SETPOINT_COL]
+		df['Inst/Set/Valve'] = df['Inst/Set'] / (df[VALVE_COL] / 100)
 		
 		data = pd.concat([data, df])
 	data['Time'] = pd.to_datetime(data['Time'])
