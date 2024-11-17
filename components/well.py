@@ -57,7 +57,7 @@ def display_wells(wells: list[Well], with_status: Status):
         slot = st.empty()
         if (well.alert_status == with_status):
             with slot.container(key=f"well_{well.name.lower()}"):
-                with st.expander(f"Oil Well &mdash; {well.name}", with_status.is_priority(), icon=well.status.get_icon()):
+                with st.expander(f"Oil Well &mdash; **{well.name}**", with_status.is_priority(), icon=well.status.get_icon()):
                     if well.alert_status == Status.OK:
                         st.info("No problems detected.", icon=":material/check_circle:")
                     elif well.alert_status == Status.HYDRATE_PREDICTED:

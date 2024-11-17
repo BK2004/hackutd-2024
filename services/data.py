@@ -8,7 +8,7 @@ VALVE_COL = "Inj Gas Valve Percent Open"
 
 well_names = []
 
-def read_all():
+def read_all() -> pd.DataFrame:
 	data = pd.DataFrame()
 	for filename in os.listdir("./data"):
 		df = pd.read_csv("./data/" + filename)
@@ -25,7 +25,7 @@ def read_all():
 	
 	return data
 
-def compute_mean_sd(data: pd.DataFrame):
+def compute_mean_sd(data: pd.DataFrame) -> tuple[float, float]:
 	sorted_data = data.sort_values(by="Inst/Set/Valve", ascending=False)
 	sorted_top = sorted_data['Inst/Set/Valve'].head(int(0.8 * len(sorted_data['Inst/Set/Valve'])))
 	return sorted_top.mean(), sorted_top.std()
@@ -33,7 +33,7 @@ def compute_mean_sd(data: pd.DataFrame):
 data = read_all()
 mean, sd = compute_mean_sd(data)
 
-def get_well_data(well, start_time, end_time):
+def get_well_data(well, start_time, end_time) -> pd.DataFrame:
 	ret_data = data.loc[(data['Time'] >= start_time) & (data['Time'] <= end_time) & (data['Well'] == well)]
 	return ret_data
 
