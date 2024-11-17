@@ -13,7 +13,7 @@ def read_all() -> pd.DataFrame:
 	data = pd.DataFrame()
 	for filename in os.listdir("./data"):
 		df = pd.read_csv("./data/" + filename)
-		well_name = filename[:filename.find('_')]
+		well_name = filename.split("_")[0]
 		well_names.append(well_name)
 
 		df['Well'] = [well_name] * len(df['Time'])

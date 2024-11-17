@@ -101,7 +101,7 @@ def well_listing(status_box):
     
     wells = fetch_well_data()
 
-    st.title("Alerts")
+    st.subheader("Alerts")
     priority_slot = st.empty()
     if any(well.alert_status.is_priority() for well in wells):
         with priority_slot.container(key="priority_list"):
@@ -112,7 +112,7 @@ def well_listing(status_box):
 
     st.divider()
 
-    st.title("Oil Wells")
+    st.subheader("Oil Wells")
     with st.container(key="regular_list"):
         display_wells(wells, Status.OK)
     
