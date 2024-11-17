@@ -1,12 +1,9 @@
 import streamlit as st
-from datetime import datetime, timedelta
-
 from components import well
-from services.data import MIN_TIMESTAMP
+from datetime import datetime
 
 DEFAULT_SESSION_STATES = {
-    "timestamp_0": MIN_TIMESTAMP,
-    "timestamp": MIN_TIMESTAMP,
+    "timestamp_0": datetime.now(),
 }
 
 # Custom CSS for the fixed footer

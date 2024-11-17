@@ -1,12 +1,16 @@
 import streamlit as st
-
 import enum
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import pandas
 
-from services.data import well_names, get_well_data, mark_anomalies
+from services.data import well_names, get_well_data, mark_anomalies, MIN_TIMESTAMP
 import notifications
+
+STEP_INTERVAL = 24 # hours
+
+global last_timestamp
+last_timestamp = MIN_TIMESTAMP
 
 class Status(enum.IntEnum):
     OK = 0
@@ -40,15 +44,28 @@ class Well:
             if self.status.is_priority():
                 notify_alert(self)
         self.alert_status = st.session_state[alert_key]
+    
+    def append(self, data: pandas.DataFrame):
+        self.data = pandas.concat([self.data, data])
 
-def fetch_well_data() -> list[Well]:
-    wells = []
+def fetch_well_data(timestamp) -> list[Well]:
+    global last_timestamp
+
+    if 'wells' not in st.session_state:
+        st.session_state['wells'] = {}
+    
     for well_name in well_names:
-        data = get_well_data(well_name, st.session_state['timestamp_0'], st.session_state['timestamp'] if 'timestamp' in st.session_state else datetime.now())
+        data = get_well_data(well_name, last_timestamp, timestamp)
         mark_anomalies(data)
-        well = Well(well_name, data, getStatus(data)) # TODO: Use small range of time based on interval
-        wells.append(well)
-    return wells
+        if well_name not in st.session_state.wells:
+            st.session_state.wells[well_name] = Well(well_name, data, getStatus(data))
+        else:
+            st.session_state.wells[well_name].append(data)
+            if data[(data['anomaly'] == True)].size > 0:
+                st.session_state[f"well_alert_{well_name.lower()}"] = Status.HYDRATE_DETECTED
+                st.session_state.wells[well_name].alert_status = Status.HYDRATE_DETECTED
+                st.session_state.wells[well_name].status = Status.HYDRATE_DETECTED if data.iloc[-1]["anomaly"] == True else Status.OK
+    return st.session_state.wells
 
 def getStatus(data):
     if len(data) == 0: return Status.OK
@@ -58,8 +75,9 @@ def getStatus(data):
     return Status.OK
 
 def display_wells(wells: list[Well], with_status: Status):
-    for well in wells:
+    for well_name in wells:
         slot = st.empty()
+        well = wells[well_name]
         if (well.alert_status == with_status):
             with slot.container(key=f"well_{well.name.lower()}"):
                 with st.expander(f"Oil Well &mdash; **{well.name}**", with_status.is_priority(), icon=well.status.get_icon()):
@@ -83,6 +101,7 @@ def display_wells(wells: list[Well], with_status: Status):
                         def dismiss(well: Well):
                             # Reset alert status back to the current status
                             st.session_state[f"well_alert_{well.name.lower()}"] = well.status
+                            well.alert_status = well.status
 
                         st.button(
                             label="Dismiss alert",
@@ -96,14 +115,18 @@ def display_wells(wells: list[Well], with_status: Status):
 
 @st.fragment(run_every=2)
 def well_listing(status_box):
+    global last_timestamp
+
+    if last_timestamp is None:
+        last_timestamp = MIN_TIMESTAMP
     status = status_box.status("Fetching latest information...")
-    if st.session_state['timestamp'] <= datetime.now(): st.session_state['timestamp'] += timedelta(hours=24)
-    
-    wells = fetch_well_data()
+
+    timechange = timedelta(days=(datetime.now() - st.session_state["timestamp_0"] + MIN_TIMESTAMP).second/2)
+    wells = fetch_well_data(MIN_TIMESTAMP + timechange)
 
     st.subheader("Alerts")
     priority_slot = st.empty()
-    if any(well.alert_status.is_priority() for well in wells):
+    if any(wells[well].alert_status.is_priority() for well in wells):
         with priority_slot.container(key="priority_list"):
             display_wells(wells, Status.HYDRATE_DETECTED)
             display_wells(wells, Status.HYDRATE_PREDICTED)
@@ -115,8 +138,9 @@ def well_listing(status_box):
     st.subheader("Oil Wells")
     with st.container(key="regular_list"):
         display_wells(wells, Status.OK)
+    last_timestamp = MIN_TIMESTAMP + timechange
     
-    status.update(label=st.session_state['timestamp'].strftime("Updated %m/%d, %I:%M %p"), state="complete")
+    status.update(label=(MIN_TIMESTAMP + timechange).strftime("Updated %m/%d, %I:%M %p"), state="complete")
 
 PUSH_TAG_KEY = "push_tag"
 
