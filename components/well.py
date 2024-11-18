@@ -98,7 +98,7 @@ def display_wells(wells: list[Well], with_status: Status):
                         x="Time",
                         y="(Fraction of Setpoint) / (Valve Percent)",
                         color="anomaly",
-                        size=50,
+                        size=20,
                     )
 
                     if with_status.is_priority():
@@ -118,13 +118,13 @@ def display_wells(wells: list[Well], with_status: Status):
                             args=[well]
                         )
 
-@st.fragment(run_every=5)
+@st.fragment(run_every=15)
 def well_listing(status_box):
     global last_timestamp
 
     status = status_box.status("Fetching latest information...")
 
-    timechange = timedelta(days=(datetime.now() - st.session_state["timestamp_0"] + MIN_TIMESTAMP).second)
+    timechange = timedelta(days=(datetime.now() - st.session_state["timestamp_0"]).seconds/4)
     wells = fetch_well_data(MIN_TIMESTAMP + timechange)
 
     st.subheader("Alerts")

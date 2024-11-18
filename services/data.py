@@ -10,7 +10,7 @@ MIN_TIMESTAMP = 0
 well_names = []
 
 def convert_data(well_name: str, df: pd.DataFrame) -> pd.DataFrame:
-	df['Time'] = pd.to_datetime(df['Time'])
+	#df['Time'] = pd.to_datetime(df['Time'])
 	df['Well'] = [well_name] * len(df['Time'])
 	df = df.ffill().bfill()
 	df['(Fraction of Setpoint) / (Valve Percent)'] = df[INST_COL] / df[SETPOINT_COL] / (df[VALVE_COL] / 100)
